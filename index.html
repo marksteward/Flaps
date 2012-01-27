@@ -1,0 +1,192 @@
+<html>
+<head>
+  <title>Flaps</title>
+
+  <style type="text/css">
+    @-webkit-keyframes flip-upper {
+        0% {
+            -webkit-transform-origin: 50% 100%;
+            -webkit-transform: rotateX(0deg) skew(0deg, 0deg);
+            color: transparent;
+            text-shadow: 0 0 0px rgba(136, 136, 68, 0.8);
+            box-shadow: 0 0 2px 0px rgba(51, 51, 51, 0);
+        }
+        100% {
+            -webkit-transform-origin: 50% 100%;
+            -webkit-transform: rotateX(90deg) skew(10deg, 0deg);
+            color: transparent;
+            text-shadow: 0 0 5px rgba(136, 136, 68, 1);
+            box-shadow: 0 0 2px 2px rgba(51, 51, 51, 0.8);
+            margin-top: 0.1ex;
+            margin-bottom: -0.1ex;
+            background-color: #4c4c4c;
+        }
+    }
+    @-webkit-keyframes flip-lower {
+        100% {
+            -webkit-transform-origin: 50% 0%;
+            -webkit-transform: rotateX(0deg) skew(0deg, 0deg);
+            color: transparent;
+            text-shadow: 0 0 0px rgba(136, 136, 68, 0.8);
+            box-shadow: 0 0 2px 0px rgba(51, 51, 51, 0);
+        }
+        0% {
+            -webkit-transform-origin: 50% 0%;
+            -webkit-transform: rotateX(90deg) skew(-10deg, 0deg);
+            color: transparent;
+            text-shadow: 0 0 5px rgba(136, 136, 68, 1);
+            box-shadow: 0 0 2px 2px rgba(51, 51, 51, 0.8);
+            margin-top: -0.1ex;
+            margin-bottom: 0.1ex;
+            background-color: #4c4c4c;
+        }
+    }
+    body {
+        margin: 1ex 1em;
+        text-align: center;
+        background-color: #1a1814;
+    }
+    #letters {
+        font: normal 36pt "Trebuchet MS", sans-serif;
+        color: #884;
+        min-width: 11.5em;
+        padding: 0.7ex 0.2em;
+        background-color: #ccc;
+        border-radius: 5px;
+				box-shadow: 0 0 2px 2px #fff;
+    }
+    input {
+        padding: 0.2ex 0.6em 0.2ex 0.6em;
+    }
+    .letter {
+				box-shadow: 0 0 1px 1px #222;
+        background-color: black;
+        text-align: center;
+        width: 1em;
+        padding: 2px;
+        display: inline-block;
+        vertical-align: top;
+    }
+    .letter .upper {
+        width: 1em;
+        height: 1ex;
+        line-height: 2ex;
+        overflow: hidden;
+        background-color: #333;
+        border-top-left-radius: 0.1ex;
+        border-top-right-radius: 0.1ex;
+    }
+    .letter .pivot {
+        height: 0.1ex;
+    }
+    .letter .lower {
+        width: 1em;
+        height: 1ex;
+        line-height: 0;
+        overflow: hidden;
+        background-color: #333;
+        border-bottom-left-radius: 0.1ex;
+        border-bottom-right-radius: 0.1ex;
+    }
+    .letter .behind .upper,
+    .letter .flip .lower {
+        visibility: hidden;
+    }
+    .letter.flip .behind .upper,
+    .letter.flip .flip .lower {
+        visibility: visible;
+    }
+    .letter.flip .flip .upper {
+        -webkit-animation: flip-upper 0.2s 0 ease-in both;
+    }
+    .letter.flip .flip .lower {
+        -webkit-animation: flip-lower 0.2s 0.2s ease-in both;
+    }
+    .letter .behind {
+        margin-bottom: -2.1ex;
+    }
+  </style>
+</head>
+<body>
+  <div class="letter">
+      <div class="behind">
+          <div class="upper">B</div>
+          <div class="pivot"></div>
+          <div class="lower">A</div>
+      </div>
+      <div class="flip">
+          <div class="upper">A</div>
+          <div class="pivot"></div>
+          <div class="lower">B</div>
+      </div>
+  </div>
+  <div id="letters"></div>
+  <p>
+    <input type="text" id="msg" width="80" value="LONDON HACKSPACE"/>
+  </p>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var txt;
+    var order = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.:'";
+    var letter;
+    var letters = [];
+    var timer;
+
+    $(function() {
+      letter = $('.letter').remove();
+      $('#msg').change();
+    });
+
+    $('#msg').on('change keydown keyup', updateMsg);
+
+    function updateMsg() {
+      txt = $(this).val();
+      if (letters.length < txt.length) {
+        for (var i = letters.length; i < txt.length; i++) {
+          letters[i] = letter.clone().appendTo($('#letters'))[0];
+          setCards(letters[i], ' ');
+        }
+      } else if (letters.length > txt.length) {
+        for (var i = letters.length; i > txt.length; i--) {
+          $(letters.pop()).detach();
+        }
+      }
+      if (timer) clearInterval(timer);
+      timer = setTimeout(flipCards, 500);
+    }
+
+    var flippedCards;
+    function flipCards() {
+        flippedCards = [];
+        for (var i = 0; i < txt.length; i++) {
+            var c = $('.flip .upper', letters[i]).text();
+            if (c == txt[i].toUpperCase()) continue;
+            setCards(letters[i], c);
+            $(letters[i]).addClass('flip');
+            flippedCards.push(letters[i]);
+        }
+        if (flippedCards.length) setTimeout(flipCardsEnd, 400);
+    }
+
+    function flipCardsEnd() {
+        /* Reset with time to redraw so it will animate again */
+        for (var i = 0; i < flippedCards.length; i++) {
+            var c = $('.flip .lower', flippedCards[i]).text();
+            $('.behind .lower, .flip .upper', flippedCards[i]).text(c);
+            $(flippedCards[i]).removeClass('flip');
+        }
+        setTimeout(flipCards, 0);
+    }
+
+    function setCards(l, c) {
+        $('.behind .lower, .flip .upper', l).text(c);
+        $('.behind .upper, .flip .lower', l).text(nextCard(c));
+    }
+     
+    function nextCard(c) {
+        return order[(order.indexOf(c) + 1) % order.length];
+    }
+  </script>
+</body>
+</html>
